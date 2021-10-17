@@ -34,7 +34,7 @@ const PROCESS_ALL_ACCESS = 0x1F0FFF
 // const Mp3FilePathname = "E:\\Music\\Olof Gustafsson - Motorhead Soundtrack.mp3"
 // const Mp3FilePathname = "1-hour-of-silence.mp3"
 
-type AudioFile struct {
+type MP3AudioFile struct {
 	Streamer      beep.StreamSeekCloser
 	Format        beep.Format
 	Control       beep.Ctrl
@@ -42,33 +42,33 @@ type AudioFile struct {
 	IsDonePlaying bool
 }
 
-func playAudioFile(audioFilePathname string, count int) (*AudioFile, error) {
+func playMp3File(mp3FilePathname string, count int) (*MP3AudioFile, error) {
 	var err error
-	audioFile := AudioFile{}
+	mp3AudioFile := MP3AudioFile{}
 
-	audioFile.OpenFile, err = os.Open(audioFilePathname)
-
-	if err != nil {
-		return nil, err
-	}
-
-	audioFile.Streamer, audioFile.Format, err = mp3.Decode(audioFile.OpenFile)
+	mp3AudioFile.OpenFile, err = os.Open(mp3FilePathname)
 
 	if err != nil {
 		return nil, err
 	}
 
-	speaker.Init(audioFile.Format.SampleRate, audioFile.Format.SampleRate.N(time.Second/10))
+	mp3AudioFile.Streamer, mp3AudioFile.Format, err = mp3.Decode(mp3AudioFile.OpenFile)
 
-	looper := beep.Loop(count, audioFile.Streamer)
+	if err != nil {
+		return nil, err
+	}
+
+	speaker.Init(mp3AudioFile.Format.SampleRate, mp3AudioFile.Format.SampleRate.N(time.Second/10))
+
+	looper := beep.Loop(count, mp3AudioFile.Streamer)
 	sequencer := beep.Seq(looper, beep.Callback(func() {
-		audioFile.IsDonePlaying = true
+		mp3AudioFile.IsDonePlaying = true
 	}))
-	audioFile.Control = beep.Ctrl{Streamer: sequencer}
+	mp3AudioFile.Control = beep.Ctrl{Streamer: sequencer}
 
-	speaker.Play(&audioFile.Control)
+	speaker.Play(&mp3AudioFile.Control)
 
-	return &audioFile, err
+	return &mp3AudioFile, err
 }
 
 func getWindowsVersion() (map[string]interface{}, error) {
@@ -155,20 +155,20 @@ func printUsages() {
 
 func playLoopedMp3() {
 	var err error
-	var audioFile *AudioFile
+	var mp3AudioFile *MP3AudioFile
 
 	log.Printf("Playing %v", Mp3FilePathname)
 
-	audioFile, err = playAudioFile(Mp3FilePathname, Mp3LoopsCount)
+	mp3AudioFile, err = playMp3File(Mp3FilePathname, Mp3LoopsCount)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer audioFile.OpenFile.Close()
-	defer audioFile.Streamer.Close()
+	defer mp3AudioFile.OpenFile.Close()
+	defer mp3AudioFile.Streamer.Close()
 
-	for !audioFile.IsDonePlaying {
+	for !mp3AudioFile.IsDonePlaying {
 		time.Sleep(time.Second * 1)
 	}
 }
