@@ -396,6 +396,10 @@ func stopRunning() {
 		return
 	}
 
+	if !isProcessRunning(pid) {
+		log.Fatal(os.ErrNotExist)
+	}
+
 	processHandle, err := syscall.OpenProcess(PROCESS_ALL_ACCESS, false, pid)
 
 	if err != nil {
