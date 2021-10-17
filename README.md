@@ -1,2 +1,2 @@
 # thelooper
-Loop empty 1 minute MP3 file
+Loop silent 1 minute MP3 file
